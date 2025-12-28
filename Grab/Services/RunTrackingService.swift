@@ -188,26 +188,24 @@ class RunTrackingService: ObservableObject {
         )
         
         var claimedHexIds: [String] = []
+        let runId = UUID()
         
         if validationResult.isValid {
-            // Convert path to polygon and claim territory
-            let coordinates = currentPath.map { $0.coordinate }
-            let simplifiedPath = H3Utils.simplifyPath(coordinates, tolerance: 10)
-            let polygon = H3Utils.pathToPolygon(simplifiedPath)
-            claimedHexIds = H3Utils.polygonToHexIds(polygon)
-            
-            // Claim territory
-            if !claimedHexIds.isEmpty {
-                try await claimTerritory(
-                    hexIds: claimedHexIds,
-                    userId: userId,
-                    runId: UUID(),
-                    distanceM: distanceM
-                )
-            }
+            // Save exact path as territory
+            let pathPoints = currentPath.map { PathPoint(latitude: $0.latitude, longitude: $0.longitude) }
+            let territoryPath = TerritoryPath(
+                runId: runId,
+                ownerUserId: userId,
+                claimedAt: Date(),
+                distanceM: distanceM,
+                path: pathPoints,
+                ownerUsername: await storage.loadUser()?.username
+            )
+            try await storage.saveTerritoryPath(territoryPath)
         }
         
         let run = Run(
+            id: runId,
             userId: userId,
             startedAt: startTime,
             endedAt: endTime,
@@ -222,8 +220,8 @@ class RunTrackingService: ObservableObject {
         // Save run
         try await storage.saveRun(run)
         
-        // Update user stats
-        await updateUserStats(userId: userId, run: run, newHexCount: claimedHexIds.count)
+        // Update user stats with path count instead of hex count
+        await updateUserStats(userId: userId, run: run, newHexCount: validationResult.isValid ? 1 : 0)
         
         return run
     }

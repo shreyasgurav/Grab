@@ -126,76 +126,90 @@ struct RunView: View {
     // MARK: - Running State
     
     private var runningView: some View {
-        VStack(spacing: 0) {
-            // Mini Map with path
+        ZStack {
+            // Full-screen map with live path
             RunMapView(
                 path: runService.currentPath.map { $0.coordinate },
                 region: $region
             )
-            .frame(height: 300)
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
+            .ignoresSafeArea()
             
-            Spacer()
-            
-            // Live Stats
-            VStack(spacing: 20) {
-                // Time
-                VStack(spacing: 4) {
-                    Text(formatTime(runService.elapsedTime))
-                        .font(.system(size: 64, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                    Text("Duration")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                HStack(spacing: 40) {
-                    // Distance
-                    VStack(spacing: 4) {
-                        Text(String(format: "%.2f", runService.distanceM / 1000))
-                            .font(.system(size: 32, weight: .semibold, design: .rounded))
+            // Minimal stats overlay at top
+            VStack {
+                HStack(spacing: 16) {
+                    // Time
+                    VStack(spacing: 2) {
+                        Text(formatTime(runService.elapsedTime))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
                             .monospacedDigit()
-                        Text("km")
-                            .font(.caption)
+                        Text("TIME")
+                            .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                     
-                    // Pace
-                    VStack(spacing: 4) {
-                        Text(runService.currentPace)
-                            .font(.system(size: 32, weight: .semibold, design: .rounded))
+                    Divider()
+                        .frame(height: 40)
+                    
+                    // Distance
+                    VStack(spacing: 2) {
+                        Text(String(format: "%.2f", runService.distanceM / 1000))
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
                             .monospacedDigit()
-                        Text("pace")
-                            .font(.caption)
+                        Text("KM")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Divider()
+                        .frame(height: 40)
+                    
+                    // Pace
+                    VStack(spacing: 2) {
+                        Text(runService.currentPace)
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                        Text("PACE")
+                            .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                 }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                .padding(.top, 60)
+                
+                Spacer()
             }
-            .padding(.vertical, 32)
             
-            Spacer()
-            
-            // Stop Button
-            Button {
-                Task {
-                    await runService.stopRun()
-                }
-            } label: {
-                Text("STOP")
-                    .font(.headline)
+            // Stop button at bottom
+            VStack {
+                Spacer()
+                
+                Button {
+                    Task {
+                        await runService.stopRun()
+                    }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 24, weight: .bold))
+                        Text("STOP")
+                            .font(.system(size: 12, weight: .bold))
+                    }
                     .foregroundColor(.white)
-                    .frame(width: 100, height: 100)
+                    .frame(width: 80, height: 80)
                     .background(Color.red)
                     .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+                }
+                .padding(.bottom, 100)
             }
-            .padding(.bottom, 40)
         }
-        .background(Color(.systemBackground))
         .onChange(of: locationService.currentLocation) { _, location in
             if let location = location {
-                withAnimation {
+                withAnimation(.easeInOut(duration: 0.3)) {
                     region.center = location.coordinate
                 }
             }

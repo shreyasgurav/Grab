@@ -6,6 +6,56 @@
 import Foundation
 import CoreLocation
 
+struct TerritoryPath: Codable, Identifiable, Equatable {
+    var id: UUID { runId }
+    let runId: UUID
+    var ownerUserId: UUID
+    var claimedAt: Date
+    var distanceM: Double
+    var path: [PathPoint]
+    
+    var ownerUsername: String?
+    
+    var distanceKm: Double {
+        distanceM / 1000.0
+    }
+    
+    init(
+        runId: UUID,
+        ownerUserId: UUID,
+        claimedAt: Date,
+        distanceM: Double,
+        path: [PathPoint],
+        ownerUsername: String? = nil
+    ) {
+        self.runId = runId
+        self.ownerUserId = ownerUserId
+        self.claimedAt = claimedAt
+        self.distanceM = distanceM
+        self.path = path
+        self.ownerUsername = ownerUsername
+    }
+}
+
+struct PathPoint: Codable, Equatable {
+    let latitude: Double
+    let longitude: Double
+    
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+    
+    init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+    
+    init(coordinate: CLLocationCoordinate2D) {
+        self.latitude = coordinate.latitude
+        self.longitude = coordinate.longitude
+    }
+}
+
 struct TerritoryHex: Codable, Identifiable, Equatable {
     var id: String { hexId }
     let hexId: String

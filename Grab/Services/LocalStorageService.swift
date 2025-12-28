@@ -18,6 +18,7 @@ actor LocalStorageService {
     private let userKey = "grab_current_user"
     private let runsKey = "grab_runs"
     private let territoryKey = "grab_territory"
+    private let territoryPathsKey = "grab_territory_paths"
     private let statsKey = "grab_user_stats"
     
     private init() {}
@@ -115,6 +116,28 @@ actor LocalStorageService {
     
     func deleteTerritory() {
         userDefaults.removeObject(forKey: territoryKey)
+    }
+    
+    // MARK: - Territory Paths
+    
+    func saveTerritoryPath(_ path: TerritoryPath) throws {
+        var paths = loadTerritoryPaths()
+        paths.append(path)
+        let data = try encoder.encode(paths)
+        userDefaults.set(data, forKey: territoryPathsKey)
+    }
+    
+    func loadTerritoryPaths() -> [TerritoryPath] {
+        guard let data = userDefaults.data(forKey: territoryPathsKey) else { return [] }
+        return (try? decoder.decode([TerritoryPath].self, from: data)) ?? []
+    }
+    
+    func loadTerritoryPaths(forUser userId: UUID) -> [TerritoryPath] {
+        loadTerritoryPaths().filter { $0.ownerUserId == userId }
+    }
+    
+    func deleteTerritoryPaths() {
+        userDefaults.removeObject(forKey: territoryPathsKey)
     }
     
     // MARK: - User Stats

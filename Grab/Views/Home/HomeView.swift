@@ -9,7 +9,7 @@ import SwiftUI
 import MapKit
 
 struct HomeView: View {
-    @StateObject private var territoryService = TerritoryService.shared
+    @StateObject private var pathService = TerritoryPathService.shared
     @StateObject private var locationService = LocationService.shared
     @StateObject private var authService = AuthService.shared
     
@@ -18,7 +18,7 @@ struct HomeView: View {
         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
     )
     
-    @State private var selectedHex: TerritoryHex?
+    @State private var selectedPath: TerritoryPath?
     @State private var showBottomSheet = false
     @State private var hasInitialLocation = false
     
@@ -27,45 +27,72 @@ struct HomeView: View {
             // Map
             MapView(
                 region: $region,
-                hexes: territoryService.visibleTerritory,
+                paths: pathService.visiblePaths,
                 currentUserId: authService.currentUser?.id,
-                onHexTapped: { hex in
-                    selectedHex = hex
+                onPathTapped: { path in
+                    selectedPath = path
                     showBottomSheet = true
                 },
-                onRegionChanged: { newRegion in
-                    Task {
-                        await territoryService.loadTerritory(for: newRegion)
-                    }
-                }
+                onRegionChanged: { _ in }
             )
             .ignoresSafeArea()
             .onAppear {
                 locationService.startUpdatingLocation()
             }
             
-            // Player stats overlay
-            PlayerStatsOverlay(
-                territories: territoryService.visibleTerritory,
-                currentUserId: authService.currentUser?.id
-            )
+            // Stats overlay showing run count
+            VStack {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(pathService.visiblePaths.count)")
+                            .font(.system(size: 24, weight: .bold))
+                        Text("Runs Claimed")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(12)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 60)
+                Spacer()
+            }
             
             // Control buttons
             VStack {
                 Spacer()
                 HStack {
                     Spacer()
-                    // Location button
-                    Button {
-                        centerOnUserLocation()
-                    } label: {
-                        Image(systemName: locationService.currentLocation != nil ? "location.fill" : "location")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.blue)
-                            .frame(width: 44, height: 44)
-                            .background(.ultraThinMaterial)
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    VStack(spacing: 12) {
+                        #if DEBUG
+                        // Mock data generator button
+                        Button {
+                            generateMockPaths()
+                        } label: {
+                            Image(systemName: "map.fill")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.green)
+                                .frame(width: 44, height: 44)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        }
+                        #endif
+                        
+                        // Location button
+                        Button {
+                            centerOnUserLocation()
+                        } label: {
+                            Image(systemName: locationService.currentLocation != nil ? "location.fill" : "location")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.blue)
+                                .frame(width: 44, height: 44)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        }
                     }
                     .padding(.trailing, 16)
                     .padding(.bottom, 100)
@@ -73,7 +100,7 @@ struct HomeView: View {
             }
             
             // Loading indicator
-            if territoryService.isLoading {
+            if pathService.isLoading {
                 VStack {
                     HStack {
                         ProgressView()
@@ -89,19 +116,17 @@ struct HomeView: View {
             }
         }
         .sheet(isPresented: $showBottomSheet) {
-            if let hex = selectedHex {
-                TerritoryBottomSheet(
-                    hex: hex,
-                    isOwnedByCurrentUser: hex.ownerUserId == authService.currentUser?.id,
-                    onDismiss: {
-                        showBottomSheet = false
-                    }
+            if let path = selectedPath {
+                TerritoryPathBottomSheet(
+                    path: path,
+                    isOwnedByCurrentUser: path.ownerUserId == authService.currentUser?.id,
+                    onDismiss: { showBottomSheet = false }
                 )
                 .presentationDetents([.height(280)])
-                .presentationDragIndicator(.hidden)
-                .presentationBackgroundInteraction(.enabled)
+                .presentationDragIndicator(.visible)
             }
         }
+        .presentationBackgroundInteraction(.enabled)
         .task {
             // Request location permission
             locationService.requestPermission()
@@ -109,11 +134,9 @@ struct HomeView: View {
             // Start location updates immediately
             locationService.startUpdatingLocation()
             
-            // Wait for location with timeout
-            var attempts = 0
-            while locationService.currentLocation == nil && attempts < 50 {
-                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
-                attempts += 1
+            // Wait for initial location before showing map
+            while locationService.currentLocation == nil {
+                try? await Task.sleep(nanoseconds: 100_000_000)
             }
             
             if let location = locationService.currentLocation {
@@ -122,7 +145,9 @@ struct HomeView: View {
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 )
                 hasInitialLocation = true
-                await territoryService.loadTerritory(for: region)
+                
+                // Load all territory paths
+                await pathService.loadAllPaths()
             } else {
                 // Fallback to default location if GPS fails
                 print("⚠️ Location not available, using default coordinates")
@@ -136,7 +161,7 @@ struct HomeView: View {
                 )
                 hasInitialLocation = true
                 Task {
-                    await territoryService.loadTerritory(for: region)
+                    await pathService.loadAllPaths()
                 }
             }
         }
@@ -167,6 +192,19 @@ struct HomeView: View {
                     )
                 }
             }
+        }
+    }
+    
+    private func generateMockPaths() {
+        guard let location = locationService.currentLocation,
+              let userId = authService.currentUser?.id else { return }
+        
+        Task {
+            await MockPathGenerator.generateMockPaths(
+                around: location.coordinate,
+                currentUserId: userId
+            )
+            await pathService.refresh()
         }
     }
     
