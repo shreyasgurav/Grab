@@ -55,7 +55,9 @@ class LocationService: NSObject, ObservableObject {
     }
     
     func requestPermission() {
-        locationManager.requestWhenInUseAuthorization()
+        if authStatus == .notDetermined {
+            locationManager.requestWhenInUseAuthorization()
+        }
     }
     
     func requestAlwaysPermission() {
@@ -63,6 +65,10 @@ class LocationService: NSObject, ObservableObject {
     }
     
     func startUpdatingLocation() {
+        if authStatus == .notDetermined {
+            locationManager.requestWhenInUseAuthorization()
+        }
+        
         guard authStatus == .authorized else {
             trackingError = "Location permission not granted"
             return

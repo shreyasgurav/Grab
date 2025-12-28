@@ -33,6 +33,8 @@ class RunTrackingService: ObservableObject {
     
     private let locationService = LocationService.shared
     private let storage = LocalStorageService.shared
+    private let firestoreService = FirestoreService.shared
+    private let authService = AuthService.shared
     
     @Published var state: RunState = .idle
     @Published var currentPath: [GPSPoint] = []
@@ -45,6 +47,15 @@ class RunTrackingService: ObservableObject {
     private var trackingTask: Task<Void, Never>?
     
     private init() {}
+    
+    // Helper to calculate pace string
+    private func calculatePaceString(distanceM: Double, durationS: TimeInterval) -> String {
+        guard distanceM > 0, durationS > 0 else { return "--:--" }
+        let paceSecondsPerKm = durationS / (distanceM / 1000.0)
+        let minutes = Int(paceSecondsPerKm) / 60
+        let seconds = Int(paceSecondsPerKm) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
     
     var isRunning: Bool {
         if case .running = state { return true }
@@ -174,7 +185,13 @@ class RunTrackingService: ObservableObject {
     // MARK: - Process Run (Validation + Territory Claim)
     
     private func processRun(startTime: Date, endTime: Date) async throws -> Run {
-        guard let userId = await storage.loadUser()?.id else {
+        // Get Firebase user ID first
+        guard let firebaseUserId = authService.firebaseUserId else {
+            throw RunError.noUser
+        }
+        
+        // Use Firebase UID as the user ID
+        guard let userId = UUID(uuidString: firebaseUserId) ?? authService.currentUser?.id else {
             throw RunError.noUser
         }
         
@@ -191,19 +208,46 @@ class RunTrackingService: ObservableObject {
         let runId = UUID()
         
         if validationResult.isValid {
-            // Save exact path as territory
-            let pathPoints = currentPath.map { PathPoint(latitude: $0.latitude, longitude: $0.longitude) }
-            let territoryPath = TerritoryPath(
-                runId: runId,
-                ownerUserId: userId,
-                claimedAt: Date(),
+            // Save exact path as territory to Firestore
+            let polygon = currentPath.map { $0.coordinate }
+            let username = authService.currentUser?.username ?? "Unknown"
+            
+            let firestoreTerritory = FirestoreTerritory(
+                id: runId.uuidString,
+                userId: firebaseUserId,
+                username: username,
+                polygon: polygon,
                 distanceM: distanceM,
-                path: pathPoints,
-                ownerUsername: await storage.loadUser()?.username
+                claimedAt: Date(),
+                colorSeed: firebaseUserId.hashValue
             )
-            try await storage.saveTerritoryPath(territoryPath)
+            
+            // Save to Firestore
+            try await firestoreService.saveTerritory(firestoreTerritory)
+            
+            // Update user stats in Firestore
+            let areaM2 = FirestoreTerritory.calculateArea(polygon: polygon)
+            try await firestoreService.updateUserStats(
+                userId: firebaseUserId,
+                distanceM: distanceM,
+                areaM2: areaM2
+            )
         }
         
+        // Save run to Firestore
+        let avgPace = calculatePaceString(distanceM: distanceM, durationS: duration)
+        let firestoreRun = FirestoreRun(
+            id: runId.uuidString,
+            userId: firebaseUserId,
+            distanceM: distanceM,
+            durationS: Int(duration),
+            avgPace: avgPace,
+            validated: validationResult.isValid,
+            createdAt: Date()
+        )
+        try await firestoreService.saveRun(firestoreRun)
+        
+        // Create local run object for return
         let run = Run(
             id: runId,
             userId: userId,
@@ -216,12 +260,6 @@ class RunTrackingService: ObservableObject {
             claimedHexIds: claimedHexIds,
             invalidReason: validationResult.error?.rawValue
         )
-        
-        // Save run
-        try await storage.saveRun(run)
-        
-        // Update user stats with path count instead of hex count
-        await updateUserStats(userId: userId, run: run, newHexCount: validationResult.isValid ? 1 : 0)
         
         return run
     }
@@ -295,19 +333,15 @@ class RunTrackingService: ObservableObject {
         try await storage.updateTerritoryBatch(hexesToUpdate)
     }
     
-    // MARK: - Update Stats
+    // MARK: - Update Stats (local fallback - main stats in Firestore)
     
     private func updateUserStats(userId: UUID, run: Run, newHexCount: Int) async {
         var stats = await storage.loadStats(forUser: userId)
         stats.totalRuns += 1
         stats.totalDistanceM += run.distanceM
         
-        if run.validLoop {
-            // Recalculate owned territory
-            let ownedHexes = await storage.loadTerritory(forUser: userId)
-            stats.ownedHexCount = ownedHexes.count
-            stats.totalTerritoryKm2 = H3Config.totalArea(hexCount: ownedHexes.count)
-        }
+        // Area is now calculated and stored in Firestore
+        // Local stats are just a cache
         
         try? await storage.saveStats(stats, forUser: userId)
     }

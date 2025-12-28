@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>811232555888-bq4jb9t1t6l747i74534l6vodbbl8omv.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.811232555888-bq4jb9t1t6l747i74534l6vodbbl8omv</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAAavlb6lSThhIbw_M3xt0mkrFdd33cfEo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>811232555888</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.shreyasgurav.Grab</string>
+	<key>PROJECT_ID</key>
+	<string>grabrunapp</string>
+	<key>STORAGE_BUCKET</key>
+	<string>grabrunapp.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:811232555888:ios:5da76bf41b2308365b95b5</string>
+</dict>
+</plist>

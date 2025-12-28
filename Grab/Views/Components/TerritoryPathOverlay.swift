@@ -2,20 +2,20 @@
 //  TerritoryPathOverlay.swift
 //  Grab
 //
-//  Overlay for displaying exact running paths as territories.
+//  Overlay for displaying filled territory areas with borders.
 //
 
 import MapKit
 import UIKit
 
-class TerritoryPathOverlay: MKPolyline {
+class TerritoryPathOverlay: MKPolygon {
     var runId: UUID?
     var ownerUserId: UUID?
     var isOwnedByCurrentUser: Bool = false
     var distanceM: Double = 0
 }
 
-class TerritoryPathRenderer: MKPolylineRenderer {
+class TerritoryPathRenderer: MKPolygonRenderer {
     private let ownerUserId: UUID?
     private let isOwnedByCurrentUser: Bool
     
@@ -27,31 +27,41 @@ class TerritoryPathRenderer: MKPolylineRenderer {
         self.lineCap = .round
         self.lineJoin = .round
         
-        // Set color based on ownership - more subtle
+        // Set colors based on ownership
         if isOwnedByCurrentUser {
-            self.strokeColor = UIColor.systemBlue.withAlphaComponent(0.65)
+            // Your territory: blue fill with darker border
+            self.fillColor = UIColor.systemBlue.withAlphaComponent(0.25)
+            self.strokeColor = UIColor.systemBlue.withAlphaComponent(0.8)
         } else if let ownerId = ownerUserId {
-            self.strokeColor = TerritoryColorGenerator.color(for: ownerId).withAlphaComponent(0.55)
+            // Other player's territory: unique color with border
+            let baseColor = TerritoryColorGenerator.color(for: ownerId)
+            self.fillColor = baseColor.withAlphaComponent(0.2)
+            self.strokeColor = baseColor.withAlphaComponent(0.7)
         } else {
-            self.strokeColor = UIColor.systemGray.withAlphaComponent(0.4)
+            // Unclaimed: gray
+            self.fillColor = UIColor.systemGray.withAlphaComponent(0.15)
+            self.strokeColor = UIColor.systemGray.withAlphaComponent(0.5)
         }
+        
+        self.lineWidth = 3.0
     }
     
     override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {
-        // Keep lines thin and consistent
-        // Slightly thicker when zoomed in for better visibility
-        if zoomScale > 2.0 {
-            self.lineWidth = 3.5
-        } else if zoomScale > 1.0 {
-            self.lineWidth = 3.0
-        } else {
+        // Adjust line width based on zoom - thinner when zoomed out
+        if zoomScale > 3.0 {
             self.lineWidth = 2.5
+        } else if zoomScale > 1.5 {
+            self.lineWidth = 2.0
+        } else if zoomScale > 0.5 {
+            self.lineWidth = 1.5
+        } else {
+            self.lineWidth = 1.0
         }
         
         // Always visible
         self.alpha = 1.0
         
-        // Draw the path
+        // Draw the filled polygon with border
         super.draw(mapRect, zoomScale: zoomScale, in: context)
     }
 }

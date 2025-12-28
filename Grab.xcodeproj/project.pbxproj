@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3DB3746A2F0169600076AA11 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3DB374692F0169600076AA11 /* FirebaseAuth */; };
+		3DB3746C2F0169600076AA11 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3DB3746B2F0169600076AA11 /* FirebaseFirestore */; };
+		3DB3746F2F016A2C0076AA11 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3DB3746E2F016A2C0076AA11 /* GoogleSignIn */; };
+		3DB374712F016A2C0076AA11 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3DB374702F016A2C0076AA11 /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3DB3733E2F00EB820076AA11 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +36,22 @@
 		3DB373472F00EB820076AA11 /* GrabUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GrabUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3D3F0CCE2F0176D100B7369D /* Exceptions for "Grab" folder in "Grab" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3DB3732F2F00EB800076AA11 /* Grab */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3DB373322F00EB800076AA11 /* Grab */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3D3F0CCE2F0176D100B7369D /* Exceptions for "Grab" folder in "Grab" target */,
+			);
 			path = Grab;
 			sourceTree = "<group>";
 		};
@@ -52,6 +72,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3DB3746A2F0169600076AA11 /* FirebaseAuth in Frameworks */,
+				3DB3746C2F0169600076AA11 /* FirebaseFirestore in Frameworks */,
+				3DB3746F2F016A2C0076AA11 /* GoogleSignIn in Frameworks */,
+				3DB374712F016A2C0076AA11 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +136,10 @@
 			);
 			name = Grab;
 			packageProductDependencies = (
+				3DB374692F0169600076AA11 /* FirebaseAuth */,
+				3DB3746B2F0169600076AA11 /* FirebaseFirestore */,
+				3DB3746E2F016A2C0076AA11 /* GoogleSignIn */,
+				3DB374702F016A2C0076AA11 /* GoogleSignInSwift */,
 			);
 			productName = Grab;
 			productReference = 3DB373302F00EB800076AA11 /* Grab.app */;
@@ -195,6 +223,11 @@
 			);
 			mainGroup = 3DB373272F00EB800076AA11;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3DB374602F0168810076AA11 /* XCRemoteSwiftPackageReference "swift-algorithms" */,
+				3DB374682F0169600076AA11 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				3DB3746D2F016A2C0076AA11 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3DB373312F00EB800076AA11 /* Products */;
 			projectDirPath = "";
@@ -322,7 +355,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -380,7 +413,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -400,11 +433,9 @@
 				DEVELOPMENT_TEAM = 8Q3JUQLLW5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Grab needs your location to track your runs in the background and claim territory.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Grab needs your location to track your runs and claim territory on the map.";
+				INFOPLIST_FILE = Grab/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UIBackgroundModes = location;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -435,11 +466,9 @@
 				DEVELOPMENT_TEAM = 8Q3JUQLLW5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Grab needs your location to track your runs in the background and claim territory.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Grab needs your location to track your runs and claim territory on the map.";
+				INFOPLIST_FILE = Grab/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UIBackgroundModes = location;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -468,7 +497,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8Q3JUQLLW5;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shreyasgurav.GrabTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -490,7 +519,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8Q3JUQLLW5;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shreyasgurav.GrabTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -584,6 +613,56 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3DB374602F0168810076AA11 /* XCRemoteSwiftPackageReference "swift-algorithms" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-algorithms.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.1;
+			};
+		};
+		3DB374682F0169600076AA11 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
+		3DB3746D2F016A2C0076AA11 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3DB374692F0169600076AA11 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3DB374682F0169600076AA11 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		3DB3746B2F0169600076AA11 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3DB374682F0169600076AA11 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		3DB3746E2F016A2C0076AA11 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3DB3746D2F016A2C0076AA11 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		3DB374702F016A2C0076AA11 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3DB3746D2F016A2C0076AA11 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3DB373282F00EB800076AA11 /* Project object */;
 }

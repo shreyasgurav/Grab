@@ -41,69 +41,105 @@ struct RunView: View {
     // MARK: - Idle State
     
     private var idleView: some View {
-        VStack(spacing: 24) {
-            Spacer()
+        ZStack {
+            // Gradient background
+            LinearGradient(
+                colors: [Color.blue.opacity(0.05), Color.blue.opacity(0.15)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
             
-            // Icon
-            Image(systemName: "figure.run.circle.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(.blue.gradient)
-            
-            // Instructions
-            VStack(spacing: 8) {
-                Text("Claim Territory")
-                    .font(.title2)
-                    .fontWeight(.bold)
+            VStack(spacing: 28) {
+                Spacer()
                 
-                Text("Run a closed loop to claim the area inside.\nComplete the loop to own the territory.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+                // Icon with glow effect
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.1))
+                        .frame(width: 140, height: 140)
+                    
+                    Image(systemName: "figure.run.circle.fill")
+                        .font(.system(size: 72))
+                        .foregroundColor(.blue)
+                }
+                
+                // Instructions
+                VStack(spacing: 10) {
+                    Text("Claim Territory")
+                        .font(.system(size: 28, weight: .bold))
+                    
+                    Text("Run a closed loop to claim the area inside.\nComplete the loop to own the territory.")
+                        .font(.system(size: 15))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .padding(.horizontal, 40)
+                }
+                
+                // GPS Status
+                gpsStatusView
+                
+                Spacer()
+                Spacer()
+                
+                // Start Button
+                Button {
+                    runService.startRun()
+                } label: {
+                    Text("START RUN")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(
+                            locationService.authStatus == .authorized
+                                ? LinearGradient(
+                                    colors: [Color.blue, Color.blue.opacity(0.8)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                  )
+                                : LinearGradient(
+                                    colors: [Color.gray, Color.gray],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                  )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 27))
+                        .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                }
+                .disabled(locationService.authStatus != .authorized)
+                .padding(.horizontal, 32)
+                .padding(.bottom, 50)
             }
-            
-            // GPS Status
-            gpsStatusView
-            
-            Spacer()
-            
-            // Start Button
-            Button {
-                runService.startRun()
-            } label: {
-                Text("START RUN")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(
-                        locationService.authStatus == .authorized
-                            ? Color.blue
-                            : Color.gray
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-            }
-            .disabled(locationService.authStatus != .authorized)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
         }
-        .background(Color(.systemBackground))
     }
     
     private var gpsStatusView: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(gpsStatusColor)
-                .frame(width: 8, height: 8)
-            
-            Text(gpsStatusText)
-                .font(.caption)
-                .foregroundColor(.secondary)
+        Button {
+            if locationService.authStatus == .notDetermined {
+                locationService.requestPermission()
+            } else if locationService.authStatus == .denied {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(gpsStatusColor)
+                    .frame(width: 8, height: 8)
+                
+                Text(gpsStatusText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.ultraThinMaterial)
+            .clipShape(Capsule())
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(.ultraThinMaterial)
-        .clipShape(Capsule())
+        .buttonStyle(.plain)
     }
     
     private var gpsStatusColor: Color {
@@ -117,7 +153,7 @@ struct RunView: View {
     private var gpsStatusText: String {
         switch locationService.authStatus {
         case .authorized: return "GPS Ready"
-        case .notDetermined: return "Location Permission Needed"
+        case .notDetermined: return "Tap to Enable Location"
         case .denied: return "Location Access Denied"
         case .restricted: return "Location Restricted"
         }
@@ -136,54 +172,54 @@ struct RunView: View {
             
             // Minimal stats overlay at top
             VStack {
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     // Time
                     VStack(spacing: 2) {
                         Text(formatTime(runService.elapsedTime))
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
                             .monospacedDigit()
                         Text("TIME")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 9, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                     
                     Divider()
-                        .frame(height: 40)
+                        .frame(height: 32)
                     
                     // Distance
                     VStack(spacing: 2) {
                         Text(String(format: "%.2f", runService.distanceM / 1000))
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
                             .monospacedDigit()
                         Text("KM")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 9, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                     
                     Divider()
-                        .frame(height: 40)
+                        .frame(height: 32)
                     
                     // Pace
                     VStack(spacing: 2) {
                         Text(runService.currentPace)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
                             .monospacedDigit()
                         Text("PACE")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: 9, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
                 .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .shadow(color: .black.opacity(0.1), radius: 6, x: 0, y: 3)
                 .padding(.top, 60)
                 
                 Spacer()
             }
             
-            // Stop button at bottom
+            // Stop button at bottom - positioned above tab bar
             VStack {
                 Spacer()
                 
@@ -192,22 +228,22 @@ struct RunView: View {
                         await runService.stopRun()
                     }
                 } label: {
-                    VStack(spacing: 4) {
+                    VStack(spacing: 3) {
                         Image(systemName: "stop.fill")
-                            .font(.system(size: 24, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                         Text("STOP")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 10, weight: .bold))
                     }
                     .foregroundColor(.white)
-                    .frame(width: 80, height: 80)
+                    .frame(width: 64, height: 64)
                     .background(Color.red)
                     .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+                    .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
                 }
-                .padding(.bottom, 100)
+                .padding(.bottom, 110)
             }
         }
-        .onChange(of: locationService.currentLocation) { _, location in
+        .onChange(of: locationService.currentLocation) { location in
             if let location = location {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     region.center = location.coordinate

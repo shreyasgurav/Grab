@@ -17,7 +17,7 @@ struct ProfileView: View {
     @State private var showSignOutAlert = false
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
                     // Profile Header
@@ -36,9 +36,9 @@ struct ProfileView: View {
                 .padding(.top, 16)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("Profile")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .navigationTitle("Profile")
+        .navigationBarTitleDisplayMode(.large)
         .onAppear {
             loadData()
         }
@@ -113,16 +113,9 @@ struct ProfileView: View {
                 )
                 
                 ProfileStatCard(
-                    icon: "square.grid.3x3.fill",
-                    title: "Hexes Owned",
-                    value: "\(stats.ownedHexCount)",
-                    color: .orange
-                )
-                
-                ProfileStatCard(
                     icon: "map.fill",
                     title: "Territory",
-                    value: String(format: "%.3f km²", stats.totalTerritoryKm2),
+                    value: String(format: "%.3f km²", stats.totalAreaKm2),
                     color: .purple
                 )
             }

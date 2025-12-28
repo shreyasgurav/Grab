@@ -22,17 +22,19 @@ struct User: Codable, Identifiable, Equatable, Sendable {
 struct UserStats: Codable, Sendable {
     var totalRuns: Int
     var totalDistanceM: Double
-    var totalTerritoryKm2: Double
-    var ownedHexCount: Int
+    var totalAreaM2: Double
     
-    init(totalRuns: Int = 0, totalDistanceM: Double = 0, totalTerritoryKm2: Double = 0, ownedHexCount: Int = 0) {
+    init(totalRuns: Int = 0, totalDistanceM: Double = 0, totalAreaM2: Double = 0) {
         self.totalRuns = totalRuns
         self.totalDistanceM = totalDistanceM
-        self.totalTerritoryKm2 = totalTerritoryKm2
-        self.ownedHexCount = ownedHexCount
+        self.totalAreaM2 = totalAreaM2
     }
     
     var totalDistanceKm: Double {
         totalDistanceM / 1000.0
+    }
+    
+    var totalAreaKm2: Double {
+        totalAreaM2 / 1_000_000.0
     }
 }

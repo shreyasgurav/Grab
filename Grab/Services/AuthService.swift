@@ -2,101 +2,204 @@
 //  AuthService.swift
 //  Grab
 //
-//  Handles user authentication (local MVP - no backend auth).
+//  Handles user authentication with Firebase Auth.
 //
 
 import Foundation
 import Combine
+import FirebaseAuth
 
 @MainActor
 class AuthService: ObservableObject {
     static let shared = AuthService()
     
+    private let firebaseService = FirebaseService.shared
+    private let firestoreService = FirestoreService.shared
     private let storage = LocalStorageService.shared
     
     @Published var currentUser: User?
+    @Published var firestoreUser: FirestoreUser?
     @Published var isAuthenticated = false
     @Published var isLoading = false
+    @Published var needsUsername = false
+    @Published var authError: String?
+    
+    private var authStateListener: AuthStateDidChangeListenerHandle?
     
     private init() {
-        Task {
-            await loadUser()
+        setupAuthStateListener()
+    }
+    
+    deinit {
+        if let listener = authStateListener {
+            Auth.auth().removeStateDidChangeListener(listener)
         }
     }
     
-    // MARK: - Load User
+    // MARK: - Auth State Listener
     
-    func loadUser() async {
-        isLoading = true
-        currentUser = await storage.loadUser()
-        isAuthenticated = currentUser != nil
-        isLoading = false
+    private func setupAuthStateListener() {
+        authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
+            Task { @MainActor in
+                await self?.handleAuthStateChange(firebaseUser: firebaseUser)
+            }
+        }
     }
     
-    // MARK: - Create Local User (MVP - no real auth)
-    
-    func createLocalUser(username: String) async throws {
+    private func handleAuthStateChange(firebaseUser: FirebaseAuth.User?) async {
         isLoading = true
         
-        let user = User(
-            id: UUID(),
+        if let firebaseUser = firebaseUser {
+            // User is signed in
+            do {
+                // Check if user exists in Firestore
+                if let fsUser = try await firestoreService.getUser(userId: firebaseUser.uid) {
+                    firestoreUser = fsUser
+                    
+                    if fsUser.hasUsername {
+                        // User has username, fully authenticated
+                        currentUser = User(
+                            id: UUID(uuidString: firebaseUser.uid) ?? UUID(),
+                            username: fsUser.username ?? "User",
+                            avatarURL: fsUser.photoURL,
+                            createdAt: fsUser.createdAt ?? Date()
+                        )
+                        isAuthenticated = true
+                        needsUsername = false
+                    } else {
+                        // User exists but needs username
+                        needsUsername = true
+                        isAuthenticated = false
+                    }
+                } else {
+                    // New user, create in Firestore
+                    try await firestoreService.createUser(
+                        userId: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        displayName: firebaseUser.displayName,
+                        photoURL: firebaseUser.photoURL?.absoluteString
+                    )
+                    
+                    firestoreUser = try await firestoreService.getUser(userId: firebaseUser.uid)
+                    needsUsername = true
+                    isAuthenticated = false
+                }
+            } catch {
+                authError = error.localizedDescription
+                print("❌ Auth error: \(error.localizedDescription)")
+            }
+            
+            isLoading = false
+        } else {
+            // User is signed out
+            currentUser = nil
+            firestoreUser = nil
+            isAuthenticated = false
+            needsUsername = false
+            isLoading = false
+        }
+    }
+    
+    // MARK: - Google Sign In
+    
+    func signInWithGoogle() async throws {
+        isLoading = true
+        authError = nil
+        
+        do {
+            let result = try await firebaseService.signInWithGoogle()
+            
+            // Auth state listener will handle the rest
+            print("Signed in as: \(result.user.email ?? "unknown")")
+        } catch {
+            isLoading = false
+            authError = error.localizedDescription
+            throw error
+        }
+    }
+    
+    // MARK: - Set Username
+    
+    func setUsername(_ username: String) async throws {
+        guard let firebaseUser = Auth.auth().currentUser else {
+            throw FirebaseError.userNotAuthenticated
+        }
+        
+        isLoading = true
+        
+        // Check if username is taken
+        let exists = try await firestoreService.checkUsernameExists(username: username)
+        if exists {
+            isLoading = false
+            throw UsernameError.alreadyTaken
+        }
+        
+        // Update username in Firestore
+        try await firestoreService.updateUsername(userId: firebaseUser.uid, username: username)
+        
+        // Update local state
+        currentUser = User(
+            id: UUID(uuidString: firebaseUser.uid) ?? UUID(),
             username: username,
-            avatarURL: nil,
+            avatarURL: firebaseUser.photoURL?.absoluteString,
             createdAt: Date()
         )
         
-        try await storage.saveUser(user)
-        
-        // Initialize empty stats
-        try await storage.saveStats(UserStats(), forUser: user.id)
-        
-        currentUser = user
+        firestoreUser?.username = username
         isAuthenticated = true
+        needsUsername = false
         isLoading = false
-    }
-    
-    // MARK: - Update User
-    
-    func updateUser(username: String? = nil, avatarURL: String? = nil) async throws {
-        guard var user = currentUser else { return }
-        
-        if let username = username {
-            user.username = username
-        }
-        if let avatarURL = avatarURL {
-            user.avatarURL = avatarURL
-        }
-        
-        try await storage.saveUser(user)
-        currentUser = user
     }
     
     // MARK: - Sign Out
     
     func signOut() async {
         isLoading = true
-        await storage.deleteUser()
+        
+        do {
+            try firebaseService.signOut()
+        } catch {
+            authError = error.localizedDescription
+        }
+        
         currentUser = nil
+        firestoreUser = nil
         isAuthenticated = false
+        needsUsername = false
         isLoading = false
     }
     
-    // MARK: - Delete Account (clears all data)
+    // MARK: - Get Firebase User ID
     
-    func deleteAccount() async {
-        isLoading = true
-        await storage.clearAllData()
-        currentUser = nil
-        isAuthenticated = false
-        isLoading = false
+    var firebaseUserId: String? {
+        Auth.auth().currentUser?.uid
     }
     
     // MARK: - Get User Stats
     
     func getUserStats() async -> UserStats {
-        guard let userId = currentUser?.id else {
+        guard let fsUser = firestoreUser else {
             return UserStats()
         }
-        return await storage.loadStats(forUser: userId)
+        
+        return UserStats(
+            totalRuns: fsUser.totalRuns,
+            totalDistanceM: fsUser.totalDistanceM,
+            totalAreaM2: fsUser.totalAreaM2
+        )
+    }
+}
+
+enum UsernameError: LocalizedError {
+    case alreadyTaken
+    case tooShort
+    case invalid
+    
+    var errorDescription: String? {
+        switch self {
+        case .alreadyTaken: return "This username is already taken"
+        case .tooShort: return "Username must be at least 3 characters"
+        case .invalid: return "Username contains invalid characters"
+        }
     }
 }

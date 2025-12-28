@@ -122,47 +122,41 @@ struct HomeView: View {
                     isOwnedByCurrentUser: path.ownerUserId == authService.currentUser?.id,
                     onDismiss: { showBottomSheet = false }
                 )
-                .presentationDetents([.height(280)])
-                .presentationDragIndicator(.visible)
             }
         }
-        .presentationBackgroundInteraction(.enabled)
-        .task {
-            // Request location permission
+        .onAppear {
+            // Request location permission immediately
             locationService.requestPermission()
-            
-            // Start location updates immediately
+        }
+        .task {
+            // Start location updates
             locationService.startUpdatingLocation()
             
-            // Wait for initial location before showing map
-            while locationService.currentLocation == nil {
-                try? await Task.sleep(nanoseconds: 100_000_000)
+            // Start realtime territory updates in background
+            Task.detached(priority: .background) { @MainActor in
+                self.pathService.startRealtimeUpdates()
             }
             
+            // Don't block - show map immediately with default location
+            // Location will update when available
             if let location = locationService.currentLocation {
                 region = MKCoordinateRegion(
                     center: location.coordinate,
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 )
                 hasInitialLocation = true
-                
-                // Load all territory paths
-                await pathService.loadAllPaths()
-            } else {
-                // Fallback to default location if GPS fails
-                print("⚠️ Location not available, using default coordinates")
             }
         }
-        .onChange(of: locationService.currentLocation) { _, newLocation in
+        .onDisappear {
+            pathService.stopRealtimeUpdates()
+        }
+        .onChange(of: locationService.currentLocation) { newLocation in
             if !hasInitialLocation, let location = newLocation {
                 region = MKCoordinateRegion(
                     center: location.coordinate,
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 )
                 hasInitialLocation = true
-                Task {
-                    await pathService.loadAllPaths()
-                }
             }
         }
     }
