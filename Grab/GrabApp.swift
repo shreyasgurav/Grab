@@ -11,7 +11,7 @@ import SwiftUI
 struct GrabApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
     }
 }
