@@ -16,31 +16,37 @@ struct TerritoryPathBottomSheet: View {
         return Color(TerritoryColorGenerator.color(for: path.ownerUserId))
     }
     
+    init(path: TerritoryPath, isOwnedByCurrentUser: Bool, onDismiss: @escaping () -> Void) {
+        self.path = path
+        self.isOwnedByCurrentUser = isOwnedByCurrentUser
+        self.onDismiss = onDismiss
+        print("🔵 TerritoryPathBottomSheet: Initialized with username: \(path.ownerUsername ?? "nil")")
+    }
+    
     var body: some View {
         VStack(spacing: 16) {
             // Top handle bar
             RoundedRectangle(cornerRadius: 2.5)
                 .fill(Color(.systemGray4))
                 .frame(width: 40, height: 4)
-                .padding(.top, 12)
+                .padding(.top, 8)
             
             // Owner info
             HStack(spacing: 14) {
                 // Avatar with owner color
                 ZStack {
                     Circle()
-                        .fill(ownerColor.opacity(0.2))
-                        .frame(width: 60, height: 60)
+                        .fill(ownerColor.opacity(0.15))
+                        .frame(width: 56, height: 56)
                     
                     Text(path.ownerUsername?.prefix(1).uppercased() ?? "?")
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.system(size: 22, weight: .bold))
                         .foregroundColor(ownerColor)
                 }
                 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(path.ownerUsername ?? "Unknown Runner")
-                        .font(.system(size: 19, weight: .semibold))
-                        .foregroundColor(.white)
+                        .font(.system(size: 18, weight: .semibold))
                     
                     if isOwnedByCurrentUser {
                         Text("Your run")
@@ -85,12 +91,11 @@ struct TerritoryPathBottomSheet: View {
                 )
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 20)
+            .padding(.bottom, 12)
+            
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 220)
-        .background(Color(white: 0.15))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .padding(.top, 8)
     }
 }
 
@@ -101,10 +106,9 @@ struct PathStatCard: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.white)
+                .font(.system(size: 16, weight: .semibold))
             Text(label)
-                .font(.system(size: 13))
+                .font(.system(size: 12))
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)

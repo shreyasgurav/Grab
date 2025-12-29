@@ -107,6 +107,9 @@ struct HomeView: View {
                     isOwnedByCurrentUser: path.ownerUserId == authService.currentUser?.id,
                     onDismiss: { showBottomSheet = false }
                 )
+                .presentationDetents([.height(240)])
+                .presentationDragIndicator(.hidden)
+                .presentationBackgroundInteraction(.enabled)
             }
         }
         .onAppear {

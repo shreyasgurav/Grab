@@ -73,7 +73,12 @@ class TerritoryPathService: ObservableObject {
         
         listener = firestoreService.listenToTerritories { [weak self] territories in
             Task { @MainActor in
-                self?.visiblePaths = territories.map { $0.toTerritoryPath() }
+                let paths = territories.map { $0.toTerritoryPath() }
+                print("🔵 TerritoryPathService: Loaded \(paths.count) territories")
+                for path in paths.prefix(3) {
+                    print("🔵   - Territory \(path.runId): username=\(path.ownerUsername ?? "nil")")
+                }
+                self?.visiblePaths = paths
             }
         }
     }
