@@ -66,21 +66,6 @@ struct HomeView: View {
                 HStack {
                     Spacer()
                     VStack(spacing: 12) {
-                        #if DEBUG
-                        // Mock data generator button
-                        Button {
-                            generateMockPaths()
-                        } label: {
-                            Image(systemName: "map.fill")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.green)
-                                .frame(width: 44, height: 44)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                        }
-                        #endif
-                        
                         // Location button
                         Button {
                             centerOnUserLocation()

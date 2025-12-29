@@ -14,12 +14,16 @@ struct GrabApp: App {
     
     init() {
         print("🟢 GrabApp: App initializing...")
+        print("🟢 GrabApp: Device: \(UIDevice.current.name)")
+        print("🟢 GrabApp: iOS: \(UIDevice.current.systemVersion)")
         
         // Configure Firebase (must be on main thread)
+        let startTime = Date()
         do {
             print("🟢 GrabApp: Configuring Firebase...")
             FirebaseApp.configure()
-            print("🟢 GrabApp: Firebase configured successfully")
+            let duration = Date().timeIntervalSince(startTime)
+            print("🟢 GrabApp: Firebase configured successfully in \(String(format: "%.2f", duration))s")
         } catch {
             print("❌ GrabApp: Firebase configuration failed: \(error)")
         }

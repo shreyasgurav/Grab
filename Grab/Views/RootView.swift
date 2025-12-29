@@ -22,11 +22,13 @@ struct RootView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 140, height: 140)
+                            .opacity(0.9)
                         
                         ProgressView()
                             .scaleEffect(1.5)
                             .tint(.white)
                     }
+                    .transition(.opacity)
                     .onAppear {
                         print("🟢 RootView: Showing loading state")
                         print("🟢 RootView: isLoading = \(authService.isLoading)")

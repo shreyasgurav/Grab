@@ -17,41 +17,42 @@ struct TerritoryPathBottomSheet: View {
     }
     
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 16) {
             // Top handle bar
             RoundedRectangle(cornerRadius: 2.5)
                 .fill(Color(.systemGray4))
-                .frame(width: 36, height: 4)
-                .padding(.top, 6)
+                .frame(width: 40, height: 4)
+                .padding(.top, 12)
             
             // Owner info
             HStack(spacing: 14) {
                 // Avatar with owner color
                 ZStack {
                     Circle()
-                        .fill(ownerColor.opacity(0.15))
-                        .frame(width: 52, height: 52)
+                        .fill(ownerColor.opacity(0.2))
+                        .frame(width: 60, height: 60)
                     
                     Text(path.ownerUsername?.prefix(1).uppercased() ?? "?")
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(ownerColor)
                 }
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(path.ownerUsername ?? "Unknown Runner")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 19, weight: .semibold))
+                        .foregroundColor(.white)
                     
                     if isOwnedByCurrentUser {
                         Text("Your run")
-                            .font(.system(size: 13))
+                            .font(.system(size: 14))
                             .foregroundColor(.blue)
                     } else {
                         HStack(spacing: 4) {
                             Image(systemName: "figure.run")
-                                .font(.system(size: 10))
+                                .font(.system(size: 11))
                             Text("Run this path to claim")
                         }
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.orange)
                     }
                 }
@@ -59,7 +60,6 @@ struct TerritoryPathBottomSheet: View {
                 Spacer()
             }
             .padding(.horizontal, 20)
-            .padding(.top, 4)
             
             // Stats row
             HStack(spacing: 0) {
@@ -85,8 +85,12 @@ struct TerritoryPathBottomSheet: View {
                 )
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.bottom, 20)
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: 220)
+        .background(Color(white: 0.15))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }
 
@@ -97,9 +101,10 @@ struct PathStatCard: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.white)
             Text(label)
-                .font(.system(size: 12))
+                .font(.system(size: 13))
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)

@@ -42,6 +42,8 @@ class AuthService: ObservableObject {
     
     private func setupAuthStateListener() {
         print("🔵 AuthService: Setting up auth state listener...")
+        
+        // Set up listener
         authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
             Task { @MainActor in
                 print("🔵 AuthService: Auth state changed - user: \(firebaseUser?.email ?? "nil")")
@@ -49,8 +51,21 @@ class AuthService: ObservableObject {
             }
         }
         
-        // If no user is signed in initially, set loading to false immediately
-        if Auth.auth().currentUser == nil {
+        // Add timeout fallback - if auth doesn't respond in 3 seconds, show UI anyway
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 3_000_000_000) // 3 seconds
+            if self.isLoading && !self.hasInitialized {
+                print("⚠️ AuthService: Timeout - forcing initialization complete")
+                self.isLoading = false
+                self.hasInitialized = true
+            }
+        }
+        
+        // Check current user immediately
+        let currentUser = Auth.auth().currentUser
+        print("🔵 AuthService: Current user at init: \(currentUser?.email ?? "nil")")
+        
+        if currentUser == nil {
             Task { @MainActor in
                 print("🔵 AuthService: No current user, setting isLoading = false")
                 self.isLoading = false
