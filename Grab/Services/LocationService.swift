@@ -36,6 +36,8 @@ class LocationService: NSObject, ObservableObject {
         locationManager.distanceFilter = 5 // Update every 5 meters
         locationManager.pausesLocationUpdatesAutomatically = false
         locationManager.activityType = .fitness
+        locationManager.allowsBackgroundLocationUpdates = true
+        locationManager.showsBackgroundLocationIndicator = true
         updateAuthStatus()
     }
     

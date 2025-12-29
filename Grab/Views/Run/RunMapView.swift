@@ -16,10 +16,10 @@ struct RunMapView: UIViewRepresentable {
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
         mapView.showsUserLocation = true
-        mapView.userTrackingMode = .followWithHeading
+        mapView.userTrackingMode = .follow
         mapView.isZoomEnabled = true
         mapView.isScrollEnabled = true
-        mapView.isRotateEnabled = true
+        mapView.isRotateEnabled = false
         mapView.mapType = .standard
         mapView.pointOfInterestFilter = .excludingAll
         mapView.setRegion(region, animated: false)
@@ -27,22 +27,18 @@ struct RunMapView: UIViewRepresentable {
     }
     
     func updateUIView(_ mapView: MKMapView, context: Context) {
-        // Remove existing polylines
-        mapView.removeOverlays(mapView.overlays)
+        // Only update overlays if path has changed significantly
+        let shouldUpdateOverlay = context.coordinator.lastPathCount != path.count
         
-        // Add live path polyline with gradient effect
-        if path.count > 1 {
-            let polyline = MKPolyline(coordinates: path, count: path.count)
-            mapView.addOverlay(polyline, level: .aboveRoads)
-        }
-        
-        // Auto-center on user location
-        if let userLocation = mapView.userLocation.location {
-            let newRegion = MKCoordinateRegion(
-                center: userLocation.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
-            )
-            mapView.setRegion(newRegion, animated: true)
+        if shouldUpdateOverlay {
+            mapView.removeOverlays(mapView.overlays)
+            
+            if path.count > 1 {
+                let polyline = MKPolyline(coordinates: path, count: path.count)
+                mapView.addOverlay(polyline, level: .aboveRoads)
+            }
+            
+            context.coordinator.lastPathCount = path.count
         }
     }
     
@@ -51,6 +47,8 @@ struct RunMapView: UIViewRepresentable {
     }
     
     class Coordinator: NSObject, MKMapViewDelegate {
+        var lastPathCount: Int = 0
+        
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let polyline = overlay as? MKPolyline {
                 let renderer = MKPolylineRenderer(polyline: polyline)

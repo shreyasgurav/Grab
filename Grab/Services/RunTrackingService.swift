@@ -214,15 +214,18 @@ class RunTrackingService: ObservableObject {
         let runId = UUID()
         
         if validationResult.isValid {
-            // Save exact path as territory to Firestore
-            let polygon = currentPath.map { $0.coordinate }
+            // Simplify path to create smoother territory lines
+            let rawPolygon = currentPath.map { $0.coordinate }
+            let simplifiedPolygon = PathSimplification.simplify(points: rawPolygon, tolerance: 10.0)
             let username = authService.currentUser?.username ?? "Unknown"
+            
+            print("🔵 RunTrackingService: Simplified path from \(rawPolygon.count) to \(simplifiedPolygon.count) points")
             
             let firestoreTerritory = FirestoreTerritory(
                 id: runId.uuidString,
                 userId: firebaseUserId,
                 username: username,
-                polygon: polygon,
+                polygon: simplifiedPolygon,
                 distanceM: distanceM,
                 claimedAt: Date(),
                 colorSeed: firebaseUserId.hashValue
@@ -232,7 +235,7 @@ class RunTrackingService: ObservableObject {
             try await firestoreService.saveTerritory(firestoreTerritory)
             
             // Update user stats in Firestore
-            let areaM2 = FirestoreTerritory.calculateArea(polygon: polygon)
+            let areaM2 = FirestoreTerritory.calculateArea(polygon: simplifiedPolygon)
             try await firestoreService.updateUserStats(
                 userId: firebaseUserId,
                 distanceM: distanceM,
@@ -288,15 +291,8 @@ class RunTrackingService: ObservableObject {
             return (false, .tooShortDuration)
         }
         
-        // Check loop closure
-        guard let first = path.first, let last = path.last else {
-            return (false, .notALoop)
-        }
-        
-        let closureDistance = H3Utils.distance(from: first.coordinate, to: last.coordinate)
-        guard closureDistance <= RunValidationConfig.loopClosureThresholdM else {
-            return (false, .notALoop)
-        }
+        // Loop closure check removed - any path is valid as territory
+        // Users can create territories from any run path, not just closed loops
         
         // Check for speed anomalies
         for i in 1..<path.count {

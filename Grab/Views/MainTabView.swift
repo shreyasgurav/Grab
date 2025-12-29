@@ -9,10 +9,11 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @State private var selectedTerritoryFromProfile: TerritoryPath?
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView()
+            HomeView(selectedTerritoryFromProfile: $selectedTerritoryFromProfile)
                 .tabItem {
                     Label("Home", systemImage: "map.fill")
                 }
@@ -24,7 +25,10 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
-            ProfileView()
+            ProfileView(
+                selectedTab: $selectedTab,
+                selectedTerritory: $selectedTerritoryFromProfile
+            )
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }

@@ -11,9 +11,14 @@ import MapKit
 struct ProfileView: View {
     @StateObject private var authService = AuthService.shared
     @StateObject private var territoryService = TerritoryService.shared
+    @StateObject private var pathService = TerritoryPathService.shared
+    
+    @Binding var selectedTab: Int
+    @Binding var selectedTerritory: TerritoryPath?
     
     @State private var stats = UserStats()
     @State private var ownedHexes: [TerritoryHex] = []
+    @State private var userTerritories: [TerritoryPath] = []
     @State private var showSignOutAlert = false
     
     var body: some View {
@@ -126,11 +131,11 @@ struct ProfileView: View {
     
     private var territoryPreview: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your Territory")
+            Text("Your Territories")
                 .font(.headline)
                 .padding(.leading, 4)
             
-            if ownedHexes.isEmpty {
+            if userTerritories.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "map")
                         .font(.system(size: 40))
@@ -140,7 +145,7 @@ struct ProfileView: View {
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
-                    Text("Complete a run loop to claim your first territory!")
+                    Text("Complete a run to claim your first territory!")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -150,9 +155,51 @@ struct ProfileView: View {
                 .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             } else {
-                TerritoryMiniMap(hexes: ownedHexes)
-                    .frame(height: 180)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                VStack(spacing: 8) {
+                    ForEach(userTerritories.prefix(5)) { territory in
+                        Button {
+                            selectedTerritory = territory
+                            selectedTab = 0
+                        } label: {
+                            HStack(spacing: 12) {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.2))
+                                    .frame(width: 40, height: 40)
+                                    .overlay(
+                                        Image(systemName: "map.fill")
+                                            .foregroundColor(.blue)
+                                    )
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(territory.claimedAt.formatted(date: .abbreviated, time: .omitted))
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    
+                                    Text("\(String(format: "%.2f", territory.distanceKm)) km")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(12)
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    if userTerritories.count > 5 {
+                        Text("+\(userTerritories.count - 5) more territories")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 4)
+                    }
+                }
             }
         }
     }
@@ -187,6 +234,14 @@ struct ProfileView: View {
             stats = await authService.getUserStats()
             if let userId = authService.currentUser?.id {
                 ownedHexes = await territoryService.loadUserTerritory(userId: userId)
+                
+                // Load all territories from Firestore first
+                await pathService.loadAllPaths()
+                
+                // Filter to get user's territories
+                userTerritories = pathService.visiblePaths.filter { $0.ownerUserId == userId }
+                
+                print("🔵 ProfileView: Loaded \(userTerritories.count) territories for user \(userId)")
             }
         }
     }
@@ -284,5 +339,5 @@ struct TerritoryMiniMap: UIViewRepresentable {
 }
 
 #Preview {
-    ProfileView()
+    ProfileView(selectedTab: .constant(0), selectedTerritory: .constant(nil))
 }

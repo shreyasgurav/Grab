@@ -13,6 +13,8 @@ struct HomeView: View {
     @StateObject private var locationService = LocationService.shared
     @StateObject private var authService = AuthService.shared
     
+    @Binding var selectedTerritoryFromProfile: TerritoryPath?
+    
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -107,9 +109,10 @@ struct HomeView: View {
                     isOwnedByCurrentUser: path.ownerUserId == authService.currentUser?.id,
                     onDismiss: { showBottomSheet = false }
                 )
-                .presentationDetents([.height(240)])
+                .presentationDetents([.height(220)])
                 .presentationDragIndicator(.hidden)
-                .presentationBackgroundInteraction(.enabled)
+                .presentationCornerRadius(20)
+                .interactiveDismissDisabled(false)
             }
         }
         .onAppear {
@@ -145,6 +148,22 @@ struct HomeView: View {
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 )
                 hasInitialLocation = true
+            }
+        }
+        .onChange(of: selectedTerritoryFromProfile) { territory in
+            if let territory = territory {
+                // Center map on territory
+                if let firstPoint = territory.path.first {
+                    region = MKCoordinateRegion(
+                        center: firstPoint.coordinate,
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    )
+                }
+                // Show territory sheet
+                selectedPath = territory
+                showBottomSheet = true
+                // Clear the binding
+                selectedTerritoryFromProfile = nil
             }
         }
     }
@@ -193,5 +212,5 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView()
+    HomeView(selectedTerritoryFromProfile: .constant(nil))
 }
