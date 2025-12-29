@@ -42,75 +42,49 @@ struct RunView: View {
     
     private var idleView: some View {
         ZStack {
-            // Gradient background
-            LinearGradient(
-                colors: [Color.blue.opacity(0.05), Color.blue.opacity(0.15)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // Dark background
+            Color.black
+                .ignoresSafeArea()
             
-            VStack(spacing: 28) {
+            VStack {
                 Spacer()
                 
-                // Icon with glow effect
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.1))
-                        .frame(width: 140, height: 140)
-                    
-                    Image(systemName: "figure.run.circle.fill")
-                        .font(.system(size: 72))
-                        .foregroundColor(.blue)
-                }
-                
-                // Instructions
-                VStack(spacing: 10) {
-                    Text("Claim Territory")
-                        .font(.system(size: 28, weight: .bold))
-                    
-                    Text("Run a closed loop to claim the area inside.\nComplete the loop to own the territory.")
-                        .font(.system(size: 15))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(4)
-                        .padding(.horizontal, 40)
-                }
-                
-                // GPS Status
-                gpsStatusView
-                
-                Spacer()
-                Spacer()
-                
-                // Start Button
+                // Centered circle button
                 Button {
-                    runService.startRun()
+                    Task {
+                        await runService.startRun()
+                    }
                 } label: {
-                    Text("START RUN")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(
-                            locationService.authStatus == .authorized
-                                ? LinearGradient(
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
                                     colors: [Color.blue, Color.blue.opacity(0.8)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                  )
-                                : LinearGradient(
-                                    colors: [Color.gray, Color.gray],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                  )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 27))
-                        .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 200, height: 200)
+                            .shadow(color: .blue.opacity(0.5), radius: 20, x: 0, y: 10)
+                        
+                        VStack(spacing: 8) {
+                            Image(systemName: "figure.run")
+                                .font(.system(size: 50, weight: .semibold))
+                                .foregroundColor(.white)
+                            
+                            Text("Start Running")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                    }
                 }
                 .disabled(locationService.authStatus != .authorized)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 50)
+                
+                Spacer()
+                
+                // GPS Status at bottom
+                gpsStatusView
+                    .padding(.bottom, 60)
             }
         }
     }
@@ -267,7 +241,7 @@ struct RunView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(Color.black)
     }
     
     // MARK: - Completed State
@@ -327,7 +301,7 @@ struct RunView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
         }
-        .background(Color(.systemBackground))
+        .background(Color.black)
     }
     
     // MARK: - Failed State
@@ -366,7 +340,7 @@ struct RunView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
         }
-        .background(Color(.systemBackground))
+        .background(Color.black)
     }
     
     // MARK: - Helpers

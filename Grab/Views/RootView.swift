@@ -11,32 +11,51 @@ struct RootView: View {
     @StateObject private var authService = AuthService.shared
     
     var body: some View {
-        Group {
-            if authService.isLoading {
-                // Loading state
-                ZStack {
-                    Color(.systemBackground)
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: 16) {
-                        Image(systemName: "map.fill")
-                            .font(.system(size: 50))
-                            .foregroundColor(.blue)
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            Group {
+                if authService.isLoading {
+                    // Loading state
+                    VStack(spacing: 24) {
+                        Image("GrabLogoNoBG")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 140, height: 140)
                         
                         ProgressView()
-                            .scaleEffect(1.2)
+                            .scaleEffect(1.5)
+                            .tint(.white)
                     }
+                    .onAppear {
+                        print("🟢 RootView: Showing loading state")
+                        print("🟢 RootView: isLoading = \(authService.isLoading)")
+                        print("🟢 RootView: isAuthenticated = \(authService.isAuthenticated)")
+                        print("🟢 RootView: needsUsername = \(authService.needsUsername)")
+                    }
+                } else if authService.isAuthenticated {
+                    // Fully authenticated - show main app
+                    MainTabView()
+                        .onAppear {
+                            print("🟢 RootView: Showing MainTabView")
+                        }
+                } else if authService.needsUsername {
+                    // Signed in but needs username
+                    UsernameSetupView()
+                        .onAppear {
+                            print("🟢 RootView: Showing UsernameSetupView")
+                        }
+                } else {
+                    // Not signed in - show login
+                    LoginView()
+                        .onAppear {
+                            print("🟢 RootView: Showing LoginView")
+                        }
                 }
-            } else if authService.isAuthenticated {
-                // Fully authenticated - show main app
-                MainTabView()
-            } else if authService.needsUsername {
-                // Signed in but needs username
-                UsernameSetupView()
-            } else {
-                // Not signed in - show login
-                LoginView()
             }
+        }
+        .onAppear {
+            print("🟢 RootView: View appeared")
         }
         .animation(.easeInOut(duration: 0.3), value: authService.isAuthenticated)
         .animation(.easeInOut(duration: 0.3), value: authService.needsUsername)

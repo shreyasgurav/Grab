@@ -63,7 +63,7 @@ struct UsernameSetupView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
-                    .background(Color(.systemBackground))
+                    .background(Color(white: 0.15))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)

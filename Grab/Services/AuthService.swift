@@ -20,13 +20,15 @@ class AuthService: ObservableObject {
     @Published var currentUser: User?
     @Published var firestoreUser: FirestoreUser?
     @Published var isAuthenticated = false
-    @Published var isLoading = false
+    @Published var isLoading = true
     @Published var needsUsername = false
     @Published var authError: String?
     
     private var authStateListener: AuthStateDidChangeListenerHandle?
+    private var hasInitialized = false
     
     private init() {
+        print("🔵 AuthService: Initializing...")
         setupAuthStateListener()
     }
     
@@ -39,25 +41,44 @@ class AuthService: ObservableObject {
     // MARK: - Auth State Listener
     
     private func setupAuthStateListener() {
+        print("🔵 AuthService: Setting up auth state listener...")
         authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
             Task { @MainActor in
+                print("🔵 AuthService: Auth state changed - user: \(firebaseUser?.email ?? "nil")")
                 await self?.handleAuthStateChange(firebaseUser: firebaseUser)
+            }
+        }
+        
+        // If no user is signed in initially, set loading to false immediately
+        if Auth.auth().currentUser == nil {
+            Task { @MainActor in
+                print("🔵 AuthService: No current user, setting isLoading = false")
+                self.isLoading = false
+                self.hasInitialized = true
             }
         }
     }
     
     private func handleAuthStateChange(firebaseUser: FirebaseAuth.User?) async {
-        isLoading = true
+        print("🔵 AuthService: handleAuthStateChange called")
+        
+        // Only set loading if we've already initialized
+        if hasInitialized {
+            isLoading = true
+        }
         
         if let firebaseUser = firebaseUser {
+            print("🔵 AuthService: User signed in: \(firebaseUser.email ?? "unknown")")
             // User is signed in
             do {
                 // Check if user exists in Firestore
                 if let fsUser = try await firestoreService.getUser(userId: firebaseUser.uid) {
+                    print("🔵 AuthService: Found user in Firestore")
                     firestoreUser = fsUser
                     
                     if fsUser.hasUsername {
                         // User has username, fully authenticated
+                        print("🔵 AuthService: User has username, fully authenticated")
                         currentUser = User(
                             id: UUID(uuidString: firebaseUser.uid) ?? UUID(),
                             username: fsUser.username ?? "User",
@@ -68,11 +89,13 @@ class AuthService: ObservableObject {
                         needsUsername = false
                     } else {
                         // User exists but needs username
+                        print("🔵 AuthService: User needs username")
                         needsUsername = true
                         isAuthenticated = false
                     }
                 } else {
                     // New user, create in Firestore
+                    print("🔵 AuthService: Creating new user in Firestore")
                     try await firestoreService.createUser(
                         userId: firebaseUser.uid,
                         email: firebaseUser.email,
@@ -89,14 +112,18 @@ class AuthService: ObservableObject {
                 print("❌ Auth error: \(error.localizedDescription)")
             }
             
+            print("🔵 AuthService: Setting isLoading = false")
             isLoading = false
+            hasInitialized = true
         } else {
             // User is signed out
+            print("🔵 AuthService: No user signed in")
             currentUser = nil
             firestoreUser = nil
             isAuthenticated = false
             needsUsername = false
             isLoading = false
+            hasInitialized = true
         }
     }
     

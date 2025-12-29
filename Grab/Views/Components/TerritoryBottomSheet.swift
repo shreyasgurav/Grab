@@ -89,7 +89,7 @@ struct TerritoryBottomSheet: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 20)
         }
-        .background(Color(.systemBackground))
+        .background(Color(white: 0.15))
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }

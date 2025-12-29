@@ -187,11 +187,17 @@ class RunTrackingService: ObservableObject {
     private func processRun(startTime: Date, endTime: Date) async throws -> Run {
         // Get Firebase user ID first
         guard let firebaseUserId = authService.firebaseUserId else {
+            print("❌ RunTrackingService: No Firebase user ID - user not authenticated")
+            print("❌ RunTrackingService: isAuthenticated = \(authService.isAuthenticated)")
+            print("❌ RunTrackingService: currentUser = \(String(describing: authService.currentUser))")
             throw RunError.noUser
         }
         
+        print("🔵 RunTrackingService: Processing run for user: \(firebaseUserId)")
+        
         // Use Firebase UID as the user ID
         guard let userId = UUID(uuidString: firebaseUserId) ?? authService.currentUser?.id else {
+            print("❌ RunTrackingService: Failed to create UUID from Firebase user ID")
             throw RunError.noUser
         }
         
@@ -354,7 +360,7 @@ enum RunError: LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .noUser: return "No user logged in"
+        case .noUser: return "Please sign in to save your run"
         case .invalidPath: return "Invalid run path"
         case .saveFailed: return "Failed to save run"
         }

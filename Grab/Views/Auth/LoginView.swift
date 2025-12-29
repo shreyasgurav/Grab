@@ -14,36 +14,28 @@ struct LoginView: View {
     
     var body: some View {
         ZStack {
-            // Background gradient
-            LinearGradient(
-                colors: [Color.blue.opacity(0.1), Color.blue.opacity(0.2)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // Black background
+            Color.black
+                .ignoresSafeArea()
             
             VStack(spacing: 40) {
                 Spacer()
                 
                 // Logo and title
                 VStack(spacing: 20) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue.opacity(0.15))
-                            .frame(width: 120, height: 120)
-                        
-                        Image(systemName: "map.fill")
-                            .font(.system(size: 50))
-                            .foregroundColor(.blue)
-                    }
+                    Image("GrabLogoNoBG")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 140, height: 140)
                     
                     VStack(spacing: 8) {
                         Text("Grab")
                             .font(.system(size: 42, weight: .bold))
+                            .foregroundColor(.white)
                         
                         Text("Claim territory by running")
                             .font(.system(size: 17))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.white.opacity(0.7))
                     }
                 }
                 
@@ -55,18 +47,20 @@ struct LoginView: View {
                         signInWithGoogle()
                     } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: "g.circle.fill")
-                                .font(.system(size: 22))
+                            Image("GoogleLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
                             
-                            Text("Continue with Google")
+                            Text("Sign in with Google")
                                 .font(.system(size: 17, weight: .semibold))
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(Color.blue)
+                        .background(Color(white: 0.2))
                         .clipShape(RoundedRectangle(cornerRadius: 27))
-                        .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 4)
                     }
                     .disabled(isSigningIn)
                     
